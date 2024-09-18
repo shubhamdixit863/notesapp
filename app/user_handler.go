@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"database/sql"
 	"golang.org/x/crypto/bcrypt"
 	"log"
@@ -24,7 +25,7 @@ func (a *App) registerHandler(w http.ResponseWriter, r *http.Request) {
 	// no range, bounds, context, type checking
 	// Check existence of user
 	var user models.User
-	err := a.db.QueryRow("SELECT username, password, role FROM users WHERE username=$1",
+	err := a.db.QueryRow(context.Background(), "SELECT username, password, role FROM users WHERE username=$1",
 		username).Scan(&user.Username, &user.Password, &user.Role)
 	switch {
 	// user is available
@@ -32,7 +33,7 @@ func (a *App) registerHandler(w http.ResponseWriter, r *http.Request) {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		utils.CheckInternalServerError(err, w)
 		// insert to database
-		_, err = a.db.Exec(`INSERT INTO users(username, password, role) VALUES($1, $2, $3)`,
+		_, err = a.db.Exec(context.Background(), `INSERT INTO users(username, password, role) VALUES($1, $2, $3)`,
 			username, hashedPassword, role)
 		utils.CheckInternalServerError(err, w)
 	case err != nil:
@@ -56,7 +57,7 @@ func (a *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// query database to get match username
 	var user models.User
-	err := a.db.QueryRow("SELECT id, username, password FROM users WHERE username=$1",
+	err := a.db.QueryRow(context.Background(), "SELECT id, username, password FROM users WHERE username=$1",
 		username).Scan(&user.Id, &user.Username, &user.Password)
 	utils.CheckInternalServerError(err, w)
 
