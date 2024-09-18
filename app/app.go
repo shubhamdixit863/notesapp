@@ -13,15 +13,17 @@ import (
 
 	"github.com/gorilla/mux"
 	_ "github.com/jackc/pgx/v5/stdlib" //use pgx in database/sql mode
+
+	"notesApp/utils"
 )
 
 // PostgreSQl configuration if not passed as env variables
 const (
-	host     = "localhost" //127.0.0.1
+	host     = "ep-winter-limit-a57ruj96.us-east-2.aws.neon.tech" //127.0.0.1
 	port     = 5432
-	user     = "postgres"
-	password = "Password"
-	dbname   = "ITPR6"
+	user     = "shubhamdixit863"
+	password = "LQMlyi3r8hjT"
+	dbname   = "rivaltrackdb"
 )
 
 var (
@@ -77,16 +79,6 @@ func (a *App) Initialize() {
 
 	log.Println("Database connected successfully")
 
-	//check data import status
-	_, err = os.Stat("./imported")
-	if os.IsNotExist(err) {
-		log.Println("--- Importing demo data")
-		a.importData()
-	}
-
-	//set some defaults for the authentication to also support HTTP and HTTPS
-	a.setupAuth()
-
 	a.Router = mux.NewRouter()
 	a.initializeRoutes()
 }
@@ -98,15 +90,8 @@ func (a *App) initializeRoutes() {
 	staticFileHandler := http.StripPrefix("/statics/", http.FileServer(staticFileDirectory))
 	a.Router.PathPrefix("/statics/").Handler(staticFileHandler).Methods("GET")
 
-	a.Router.HandleFunc("/", a.indexHandler).Methods("GET")
 	a.Router.HandleFunc("/login", a.loginHandler).Methods("POST", "GET")
-	a.Router.HandleFunc("/logout", a.logoutHandler).Methods("GET")
 	a.Router.HandleFunc("/register", a.registerHandler).Methods("POST", "GET")
-	a.Router.HandleFunc("/list", a.listHandler).Methods("GET")
-	a.Router.HandleFunc("/list/{srt:[0-9]+}", a.listHandler).Methods("GET")
-	a.Router.HandleFunc("/create", a.createHandler).Methods("POST", "GET")
-	a.Router.HandleFunc("/update", a.updateHandler).Methods("POST", "GET")
-	a.Router.HandleFunc("/delete", a.deleteHandler).Methods("POST", "GET")
 
 	log.Println("Routes established")
 
@@ -118,7 +103,7 @@ func (a *App) Run(addr string) {
 	}
 
 	// get the local IP that has Internet connectivity
-	ip := GetOutboundIP()
+	ip := utils.GetOutboundIP()
 
 	log.Printf("Starting HTTP service on http://%s:%s", ip, a.bindport)
 	// setup HTTP on gorilla mux for a gracefull shutdown

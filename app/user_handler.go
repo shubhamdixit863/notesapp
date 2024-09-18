@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"notesApp/models"
 	"notesApp/utils"
 )
 
@@ -22,7 +23,7 @@ func (a *App) registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// no range, bounds, context, type checking
 	// Check existence of user
-	var user User
+	var user models.User
 	err := a.db.QueryRow("SELECT username, password, role FROM users WHERE username=$1",
 		username).Scan(&user.Username, &user.Password, &user.Role)
 	switch {
@@ -54,7 +55,7 @@ func (a *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("psw")
 
 	// query database to get match username
-	var user User
+	var user models.User
 	err := a.db.QueryRow("SELECT id, username, password FROM users WHERE username=$1",
 		username).Scan(&user.Id, &user.Username, &user.Password)
 	utils.CheckInternalServerError(err, w)
@@ -75,46 +76,6 @@ func (a *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Successful login. New session with initial constant and variable attributes
-	sess := session.NewSessionOptions(&session.SessOptions{
-		CAttrs: map[string]interface{}{"username": user.Username, "userid": user.Id},
-		Attrs:  map[string]interface{}{"count": 1},
-	})
-	session.Add(sess, w)
+	// Successful login. Create JWT and send it
 
-	http.Redirect(w, r, "/list", 301)
-}
-
-func (a *App) logoutHandler(w http.ResponseWriter, r *http.Request) {
-
-	// get the current session variables
-	s := session.Get(r)
-	log.Printf("User %s", s.CAttr("username").(string))
-	session.Remove(s, w)
-	s = nil
-
-	http.Redirect(w, r, "/login", 301)
-}
-
-func (a *App) isAuthenticated(w http.ResponseWriter, r *http.Request) {
-	authenticated := false
-
-	//m := map[string]interface{}{}
-
-	// get the current session variables
-	sess := session.Get(r)
-
-	if sess != nil {
-		u := sess.CAttr("username").(string)
-		c := sess.Attr("count").(int)
-
-		//just a simple authentication check for the current user
-		if c > 0 && len(u) > 0 {
-			authenticated = true
-		}
-	}
-
-	if !authenticated {
-		http.Redirect(w, r, "/login", 301)
-	}
 }
