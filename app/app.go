@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -37,37 +36,20 @@ type App struct {
 	role     string
 }
 
+func NewApp() *App {
+	return &App{}
+}
+
 func (a *App) Initialize() {
-	a.bindport = "80"
 
-	//check if a different bind port was passed from the CLI
-	//os.Setenv("PORT", "8080")
-	tempport := os.Getenv("PORT")
-	if tempport != "" {
-		a.bindport = tempport
-	}
-
-	if len(os.Args) > 1 {
-		s := os.Args[1]
-
-		if _, err := strconv.ParseInt(s, 10, 64); err == nil {
-			log.Printf("Using port %s", s)
-			a.bindport = s
-		}
-	}
 	connStr := "postgresql://shubhamdixit863:LQMlyi3r8hjT@ep-winter-limit-a57ruj96.us-east-2.aws.neon.tech/rivaltrackdb?sslmode=require"
 	db, err := pgx.Connect(context.Background(), connStr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-	defer db.Close(context.Background())
+
 	a.db = db
-	//db, err = sql.Open("sqlite3", "db.sqlite3")
-	if err != nil {
-		log.Println("Invalid DB arguments, or github.com/lib/pq not installed")
-		log.Fatal(err)
-	}
 
 	log.Println("Database connected successfully")
 
@@ -78,31 +60,23 @@ func (a *App) Initialize() {
 func (a *App) initializeRoutes() {
 	// setup static content route - strip ./assets/assets/[resource]
 	// to keep /assets/[resource] as a route
-	staticFileDirectory := http.Dir("./statics/")
-	staticFileHandler := http.StripPrefix("/statics/", http.FileServer(staticFileDirectory))
-	a.Router.PathPrefix("/statics/").Handler(staticFileHandler).Methods("GET")
+	a.Router.HandleFunc("/health", a.healthHandler)
 
 	a.Router.HandleFunc("/login", a.loginHandler).Methods("POST", "GET")
 	a.Router.HandleFunc("/register", a.registerHandler).Methods("POST", "GET")
 	a.Router.HandleFunc("/notes", a.CreateNotesHandler).Methods("POST")
+	a.Router.HandleFunc("/notes/{id}", a.GetNoteById).Methods("GET")
+	a.Router.HandleFunc("/notes", a.GetNotesHandler).Methods("GET")
 
 	log.Println("Routes established")
 
 }
 
 func (a *App) Run(addr string) {
-	// Default to port 8080 if no address is provided
-	if addr != "" {
-		a.bindport = addr
-	} else {
-		a.bindport = "8080"
-	}
 
 	// Set up HTTP on Gorilla mux for a graceful shutdown
 	srv := &http.Server{
-		// Listen on the provided IP and port, or default to "0.0.0.0:8080" to allow external access
-		Addr: "0.0.0.0:" + a.bindport,
-
+		Addr:         addr,
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,

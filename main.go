@@ -3,7 +3,7 @@ package main
 import "notesApp/app"
 
 func main() {
-	a := app.App{}
+	a := app.NewApp()
 	a.Initialize()
-	a.Run("")
+	a.Run("0.0.0.0:8080")
 }

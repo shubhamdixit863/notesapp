@@ -44,6 +44,15 @@ func (a *App) registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (a *App) healthHandler(w http.ResponseWriter, r *http.Request) {
+	payload := struct {
+		Message string `json:"message"`
+	}{
+		Message: "ok",
+	}
+	utils.RespondWithJSON(w, 200, payload)
+}
+
 func (a *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Method %s", r.Method)
 	if r.Method != "POST" {
