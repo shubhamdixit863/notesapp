@@ -2,6 +2,8 @@ package utils
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"log"
 	"net/http"
@@ -55,4 +57,30 @@ func GenerateJWT(username, role string) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+// VerifyJWT parses and validates a JWT token and returns the claims if valid
+func VerifyJWT(tokenStr string) (*Claims, error) {
+	claims := &Claims{}
+
+	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return jwtKey, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	if claims.ExpiresAt.Before(time.Now()) {
+		return nil, errors.New("token has expired")
+	}
+
+	return claims, nil
 }

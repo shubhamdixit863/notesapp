@@ -55,9 +55,11 @@ func (a *App) initializeRoutes() {
 
 	a.Router.HandleFunc("/login", a.loginHandler).Methods("POST", "GET")
 	a.Router.HandleFunc("/register", a.registerHandler).Methods("POST", "GET")
-	a.Router.HandleFunc("/notes", a.CreateNotesHandler).Methods("POST")
-	a.Router.HandleFunc("/notes/{id}", a.GetNoteById).Methods("GET")
-	a.Router.HandleFunc("/notes", a.GetNotesHandler).Methods("GET")
+	a.Router.Handle("/notes", JWTAuthMiddleware(http.HandlerFunc(a.CreateNotesHandler))).Methods("POST")
+	a.Router.Handle("/notes/{id}", JWTAuthMiddleware(http.HandlerFunc(a.GetNoteById))).Methods("GET")
+	a.Router.Handle("/notes", JWTAuthMiddleware(http.HandlerFunc(a.GetNotesHandler))).Methods("GET")
+	a.Router.Handle("/notes/{id}", JWTAuthMiddleware(http.HandlerFunc(a.UpdateNotesHandler))).Methods("PUT")
+	a.Router.Handle("/notes/{id}", JWTAuthMiddleware(http.HandlerFunc(a.DeleteNotesHandler))).Methods("DELETE")
 
 	log.Println("Routes established")
 
