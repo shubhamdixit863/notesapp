@@ -2,9 +2,10 @@ package utils
 
 import (
 	"encoding/json"
+	"github.com/golang-jwt/jwt/v4"
 	"log"
-	"net"
 	"net/http"
+	"time"
 )
 
 func CheckInternalServerError(err error, w http.ResponseWriter) {
@@ -26,13 +27,32 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(response)
 }
 
-// used to auto detect the active local IP address - not used yet
-func GetOutboundIP() string {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Fatal(err)
+var jwtKey = []byte("very_secret")
+
+type Claims struct {
+	Username string `json:"username"`
+	Role     string `json:"role"`
+	jwt.RegisteredClaims
+}
+
+func GenerateJWT(username, role string) (string, error) {
+	expirationTime := time.Now().Add(24 * time.Hour)
+
+	claims := &Claims{
+		Username: username,
+		Role:     role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
 	}
-	defer conn.Close()
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	return localAddr.IP.String()
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString(jwtKey)
+	if err != nil {
+		log.Println("Error generating JWT:", err)
+		return "", err
+	}
+
+	return tokenString, nil
 }

@@ -14,15 +14,6 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib" //use pgx in database/sql mode
 )
 
-// PostgreSQl configuration if not passed as env variables
-const (
-	host     = "ep-winter-limit-a57ruj96.us-east-2.aws.neon.tech" //127.0.0.1
-	port     = 5432
-	user     = "shubhamdixit863"
-	password = "LQMlyi3r8hjT"
-	dbname   = "rivaltrackdb"
-)
-
 var (
 	err  error
 	wait time.Duration
