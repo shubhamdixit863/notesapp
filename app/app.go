@@ -3,15 +3,15 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib" //use pgx in database/sql mode
+	"github.com/rs/cors"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
-
-	"github.com/gorilla/mux"
-	_ "github.com/jackc/pgx/v5/stdlib" //use pgx in database/sql mode
 )
 
 var (
@@ -45,6 +45,7 @@ func (a *App) Initialize() {
 	log.Println("Database connected successfully")
 
 	a.Router = mux.NewRouter()
+
 	a.initializeRoutes()
 }
 
@@ -73,13 +74,14 @@ func (a *App) initializeRoutes() {
 
 func (a *App) Run(addr string) {
 
+	handler := cors.Default().Handler(a.Router)
 	// Set up HTTP on Gorilla mux for a graceful shutdown
 	srv := &http.Server{
 		Addr:         addr,
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
-		Handler:      a.Router, // Assuming a.Router is already set up with the routes
+		Handler:      handler, // Assuming a.Router is already set up with the routes
 	}
 
 	// Start the HTTP listener in a goroutine as it's blocking
