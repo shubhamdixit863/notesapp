@@ -33,7 +33,7 @@ func NewApp() *App {
 
 func (a *App) Initialize() {
 
-	connStr := "postgresql://shubhamdixit863:LQMlyi3r8hjT@ep-winter-limit-a57ruj96.us-east-2.aws.neon.tech/rivaltrackdb?sslmode=require"
+	connStr := os.Getenv("CONN_STRING")
 	db, err := pgx.Connect(context.Background(), connStr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
@@ -79,7 +79,7 @@ func (a *App) Run(addr string) {
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
-		Debug:            true, // Enable CORS debugging (optional, can be turned off in production)
+		Debug:            true,
 	})
 
 	// Wrap the router with CORS middleware
