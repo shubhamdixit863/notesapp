@@ -1,12 +1,20 @@
 package models
 
+import "time"
+
+type SharedUser struct {
+	Username string `json:"username"`
+	Access   string `json:"access"`
+}
 type Note struct {
-	Id             int64  `json:"id,omitempty"`
-	Name           string `json:"name"`
-	Text           string `json:"text"`
-	Status         string `json:"status"`
-	DelegationUser string `json:"delegationUser"`
-	CompletionTime string `json:"completionTime"`
+	Id             int64        `json:"id,omitempty"`
+	Name           string       `json:"name"`
+	Text           string       `json:"text"`
+	Status         string       `json:"status"`
+	DelegationUser string       `json:"delegationUser,omitempty"`
+	CompletionTime string       `json:"completionTime,omitempty"`
+	SharedUsers    []SharedUser `json:"sharedUsers,omitempty"`
+	CreatedAt      time.Time    `json:"createdAt"`
 }
 
 type Response struct {

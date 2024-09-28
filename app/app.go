@@ -55,11 +55,17 @@ func (a *App) initializeRoutes() {
 
 	a.Router.HandleFunc("/login", a.loginHandler).Methods("POST", "GET")
 	a.Router.HandleFunc("/register", a.registerHandler).Methods("POST", "GET")
+	a.Router.HandleFunc("/users", a.GetAllUsersHandler).Methods("GET")
 	a.Router.Handle("/notes", JWTAuthMiddleware(http.HandlerFunc(a.CreateNotesHandler))).Methods("POST")
-	a.Router.Handle("/notes/{id}", JWTAuthMiddleware(http.HandlerFunc(a.GetNoteById))).Methods("GET")
 	a.Router.Handle("/notes", JWTAuthMiddleware(http.HandlerFunc(a.GetNotesHandler))).Methods("GET")
+	a.Router.Handle("/notes/search", JWTAuthMiddleware(http.HandlerFunc(a.SearchNotesHandler))).Methods("GET")
+	a.Router.Handle("/notes/{id}/analyze", JWTAuthMiddleware(http.HandlerFunc(a.AnalyzeNoteHandler))).Methods("POST")
+	a.Router.Handle("/notes/{id}/share", JWTAuthMiddleware(http.HandlerFunc(a.ShareNoteHandler))).Methods("PUT")
+	a.Router.Handle("/notes/{id}/shared-users", JWTAuthMiddleware(http.HandlerFunc(a.GetSharedUsersHandler))).Methods("GET")
 	a.Router.Handle("/notes/{id}", JWTAuthMiddleware(http.HandlerFunc(a.UpdateNotesHandler))).Methods("PUT")
 	a.Router.Handle("/notes/{id}", JWTAuthMiddleware(http.HandlerFunc(a.DeleteNotesHandler))).Methods("DELETE")
+	a.Router.Handle("/notes/{id}", JWTAuthMiddleware(http.HandlerFunc(a.GetNoteById))).Methods("GET")
+	a.Router.Handle("/notes/{id}/status", JWTAuthMiddleware(http.HandlerFunc(a.UpdateTaskStatusHandler))).Methods("PUT")
 
 	log.Println("Routes established")
 
