@@ -74,7 +74,17 @@ func (a *App) initializeRoutes() {
 
 func (a *App) Run(addr string) {
 
-	handler := cors.Default().Handler(a.Router)
+	corsOptions := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+		Debug:            true, // Enable CORS debugging (optional, can be turned off in production)
+	})
+
+	// Wrap the router with CORS middleware
+	handler := corsOptions.Handler(a.Router)
+
 	// Set up HTTP on Gorilla mux for a graceful shutdown
 	srv := &http.Server{
 		Addr:         addr,
