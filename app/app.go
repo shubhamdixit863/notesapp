@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib" //use pgx in database/sql mode
 	"github.com/rs/cors"
 	"log"
@@ -21,7 +21,7 @@ var (
 
 type App struct {
 	Router   *mux.Router
-	db       *pgx.Conn
+	db       *pgxpool.Pool
 	bindport string
 	username string
 	role     string
@@ -34,7 +34,7 @@ func NewApp() *App {
 func (a *App) Initialize() {
 
 	connStr := os.Getenv("CONN_STRING")
-	db, err := pgx.Connect(context.Background(), connStr)
+	db, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
@@ -119,7 +119,7 @@ func (a *App) Run(addr string) {
 	// Close database connections if applicable
 	if a.db != nil {
 		log.Println("Closing database connections")
-		a.db.Close(context.Background())
+		a.db.Close()
 	}
 
 	log.Println("Shutting down the application")
